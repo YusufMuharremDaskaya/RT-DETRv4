@@ -13,7 +13,7 @@ def stats(
     base_size = cfg.train_dataloader.collate_fn.base_size
     input_shape = (1, 3, base_size, base_size)
 
-    model_for_info = copy.deepcopy(cfg.model).deploy()
+    model_for_info = copy.deepcopy(cfg.model).deploy().cpu()
 
     flops, macs, _ = calculate_flops(model=model_for_info,
                                         input_shape=input_shape,
