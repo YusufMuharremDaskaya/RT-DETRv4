@@ -55,7 +55,7 @@ class BaseSolver(object):
         self.model = cfg.model
 
         # Setup teacher model
-        self.teacher_model = to(cfg.teacher_model, device)
+        self.teacher_model = DINOv3Teacher()
 
         # NOTE: Must load_tuning_state before EMA instance building
         if self.cfg.tuning:
