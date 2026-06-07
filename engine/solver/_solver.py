@@ -44,26 +44,38 @@ class BaseSolver(object):
             50, 25, 75, 98, 153, 37, 73, 115, 132, 106, 61, 163, 134, 277, 81, 133, 18, 94, 30,
             169, 70, 328, 226
         ]
+        
     def _setup(self):
         """Avoid instantiating unnecessary classes"""
         cfg = self.cfg
+        
+        # 1. Cihazı her rank için doğru ayarla
         if cfg.device:
             device = torch.device(cfg.device)
         else:
-            device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+            # DDP kullanıyorsan 'cuda' + local_rank ile cihazı bağlaman şarttır
+            # Eğer kodun zaten 'rank' değişkenini dışarıdan alıyorsa, 
+            # torch.cuda.set_device(rank) yapıldığından emin ol.
+            device = torch.device(f'cuda:{dist.get_rank()}')
+            torch.cuda.set_device(device)
 
-        self.model = cfg.model
+        # 2. Modeli her rank'te yeniden oluştur veya GPU'ya gönder
+        # self.model = cfg.model yerine, her rank'in kendi modelini yüklediğinden emin ol
+        self.model = cfg.model.to(device)
 
         # Setup teacher model
         self.teacher_model = to(cfg.teacher_model, device)
 
         # NOTE: Must load_tuning_state before EMA instance building
         if self.cfg.tuning:
-            print(f'Tuning checkpoint from {self.cfg.tuning}')
+            if dist.get_rank() == 0:
+                print(f'Tuning checkpoint from {self.cfg.tuning}')
             self.load_tuning_state(self.cfg.tuning)
 
+        # 3. Artık her rank kendi cihazındaki modeli warp_model'e gönderiyor
         self.model = dist_utils.warp_model(
-            self.model.to(device), sync_bn=cfg.sync_bn, find_unused_parameters=cfg.find_unused_parameters
+            self.model, 
+            self.cfg.get('find_unused_parameters', False)
         )
 
         self.criterion = self.to(cfg.criterion, device)
