@@ -76,7 +76,7 @@ class BaseSolver(object):
         # 3. Artık her rank kendi cihazındaki modeli warp_model'e gönderiyor
         self.model = dist_utils.warp_model(
             self.model, 
-            self.cfg.get('find_unused_parameters', False)
+            getattr(self.cfg, 'find_unused_parameters', False)
         )
 
         self.criterion = self.to(cfg.criterion, device)
