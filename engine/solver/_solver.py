@@ -16,6 +16,7 @@ import atexit
 
 from ..misc import dist_utils
 from ..core import BaseConfig
+import torch.distributed as dist
 
 
 def to(m: nn.Module, device: str):
@@ -44,7 +45,7 @@ class BaseSolver(object):
             50, 25, 75, 98, 153, 37, 73, 115, 132, 106, 61, 163, 134, 277, 81, 133, 18, 94, 30,
             169, 70, 328, 226
         ]
-        
+
     def _setup(self):
         """Avoid instantiating unnecessary classes"""
         cfg = self.cfg
