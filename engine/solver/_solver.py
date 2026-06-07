@@ -47,36 +47,32 @@ class BaseSolver(object):
         ]
 
     def _setup(self):
-        """Avoid instantiating unnecessary classes"""
         cfg = self.cfg
-        
-        # 1. Cihazı her rank için doğru ayarla
-        if cfg.device:
-            device = torch.device(cfg.device)
-        else:
-            # DDP kullanıyorsan 'cuda' + local_rank ile cihazı bağlaman şarttır
-            # Eğer kodun zaten 'rank' değişkenini dışarıdan alıyorsa, 
-            # torch.cuda.set_device(rank) yapıldığından emin ol.
-            device = torch.device(f'cuda:{dist.get_rank()}')
-            torch.cuda.set_device(device)
+        # Her rank kendi GPU'sunu net olarak bilsin
+        local_rank = int(os.environ.get("LOCAL_RANK", 0))
+        device = torch.device(f'cuda:{local_rank}')
+        torch.cuda.set_device(device)
 
-        # 2. Modeli her rank'te yeniden oluştur veya GPU'ya gönder
-        # self.model = cfg.model yerine, her rank'in kendi modelini yüklediğinden emin ol
+        # Modeli her rank'te mutlaka oluştur
+        # 'cfg.model' bir nesne değilse, doğrudan burada oluşturulmasını sağla
         self.model = cfg.model.to(device)
 
-        # Setup teacher model
+        # Öğretmen modelini her rank'te oluştur
         self.teacher_model = to(cfg.teacher_model, device)
 
-        # NOTE: Must load_tuning_state before EMA instance building
-        if self.cfg.tuning:
-            if dist.get_rank() == 0:
-                print(f'Tuning checkpoint from {self.cfg.tuning}')
+        # Tunig state kontrolü sadece ana rank'te yapılsın
+        if self.cfg.tuning and local_rank == 0:
+            print(f'Tuning checkpoint from {self.cfg.tuning}')
             self.load_tuning_state(self.cfg.tuning)
+            
+        # Barrier ile tüm rank'lerin aynı noktaya gelmesini bekle
+        if dist.is_initialized():
+            dist.barrier()
 
-        # 3. Artık her rank kendi cihazındaki modeli warp_model'e gönderiyor
+        # Artık model her rank'te hazır, DDP'ye gönder
         self.model = dist_utils.warp_model(
             self.model, 
-            getattr(self.cfg, 'find_unused_parameters', False)
+            find_unused_parameters=getattr(self.cfg, 'find_unused_parameters', False)
         )
 
         self.criterion = self.to(cfg.criterion, device)
