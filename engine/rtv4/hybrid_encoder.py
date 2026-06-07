@@ -249,6 +249,11 @@ class TransformerEncoderLayer(nn.Module):
         if self.normalize_before:
             src = self.norm1(src)
         q = k = self.with_pos_embed(src, pos_embed)
+        
+        if q.shape[1] != src.shape[1]:
+            q = q.repeat(1, src.shape[1], 1)
+        if k.shape[1] != src.shape[1]:
+            k = k.repeat(1, src.shape[1], 1)
         src, _ = self.self_attn(q, k, value=src, attn_mask=src_mask)
 
         src = residual + self.dropout1(src)
