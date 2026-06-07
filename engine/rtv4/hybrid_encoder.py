@@ -250,11 +250,6 @@ class TransformerEncoderLayer(nn.Module):
             src = self.norm1(src)
         q = k = self.with_pos_embed(src, pos_embed)
         
-        if q.shape[1] != src.shape[1]:
-            q = q.expand(-1, src.shape[1], -1)
-        if k.shape[1] != src.shape[1]:
-            k = k.expand(-1, src.shape[1], -1)
-
         src, _ = self.self_attn(q, k, value=src, attn_mask=src_mask)
 
         src = residual + self.dropout1(src)
