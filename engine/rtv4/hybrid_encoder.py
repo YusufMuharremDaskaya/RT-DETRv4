@@ -8,6 +8,7 @@ Copyright (c) 2024 The DEIM Authors. All Rights Reserved.
 
 import copy
 from collections import OrderedDict
+from typing import Optional
 
 import torch
 import torch.nn as nn
@@ -241,7 +242,7 @@ class TransformerEncoderLayer(nn.Module):
         self.activation = get_activation(activation)
 
     @staticmethod
-    def with_pos_embed(self, tensor, pos_embed):
+    def with_pos_embed(self, tensor, pos_embed: Optional[Tensor]):
         return tensor if pos_embed is None else tensor + pos_embed.to(tensor.device)
 
     def forward(self, src, src_mask=None, pos_embed=None) -> torch.Tensor:
