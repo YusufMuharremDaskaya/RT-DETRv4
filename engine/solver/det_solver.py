@@ -19,6 +19,8 @@ from ._solver import BaseSolver
 from .det_engine import train_one_epoch, evaluate
 from ..optim.lr_scheduler import FlatCosineLRScheduler
 
+import torch.distributed as dist
+
 
 class DetSolver(BaseSolver):
 
