@@ -11,8 +11,8 @@ train_dataloader:
   type: DataLoader
   dataset:
     type: CocoDetection
-    img_folder: /kaggle/input/datasets/yusufmuharremdakaya/plane-dataset/train
-    ann_file: /kaggle/input/datasets/yusufmuharremdakaya/plane-dataset/train/_annotations.coco.json
+    img_folder: /kaggle/input/datasets/yusufmuharremdakaya/other-plane-dataset/train
+    ann_file: /kaggle/input/datasets/yusufmuharremdakaya/other-plane-dataset/train/_annotations.coco.json
     return_masks: False
     transforms:
       type: Compose
@@ -28,8 +28,8 @@ val_dataloader:
   type: DataLoader
   dataset:
     type: CocoDetection
-    img_folder: /kaggle/input/datasets/yusufmuharremdakaya/plane-dataset/valid
-    ann_file: /kaggle/input/datasets/yusufmuharremdakaya/plane-dataset/valid/_annotations.coco.json
+    img_folder: /kaggle/input/datasets/yusufmuharremdakaya/other-plane-dataset/valid
+    ann_file: /kaggle/input/datasets/yusufmuharremdakaya/other-plane-dataset/valid/_annotations.coco.json
     return_masks: False
     transforms:
       type: Compose
